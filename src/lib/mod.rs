@@ -1,7 +1,6 @@
 mod deserialized;
 mod errors;
 mod parser;
-mod token;
 mod tokenizer;
 use parser::Parser;
 

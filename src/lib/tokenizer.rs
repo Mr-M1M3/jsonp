@@ -1,6 +1,7 @@
 use crate::lib::errors::DeserializationError;
 use DeserializationError::{INVALID_NUMBER, UNEXPECTED_EOF, UNEXPECTED_TOKEN};
-use crate::lib::token::Token;
+mod token;
+pub use token::Token;
 
 pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
     let mut iterable_input = input.chars().enumerate().peekable();

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::lib::deserialized::Deserialized;
 use crate::lib::errors::DeserializationError;
 use crate::lib::errors::DeserializationError::{UNEXPECTED_EOF, UNEXPECTED_TOKEN};
-use crate::lib::token::Token;
+use crate::lib::tokenizer::Token;
 
 pub struct Parser {
     input: Vec<Token>,
