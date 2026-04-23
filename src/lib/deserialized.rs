@@ -5,7 +5,7 @@ pub enum Deserialized {
     Str(String),
     Number(f64),
     Boolean(bool),
-    List(Vec<Deserialized>),
-    Map(HashMap<String, Deserialized>),
+    Array(Vec<Deserialized>),
+    Object(HashMap<String, Deserialized>),
     Null
 }

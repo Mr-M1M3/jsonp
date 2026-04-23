@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use crate::lib::token::Token;
 use crate::lib::deserialized::Deserialized;
 use crate::lib::errors::DeserializationError;
 use crate::lib::errors::DeserializationError::{UNEXPECTED_EOF, UNEXPECTED_TOKEN};
+use crate::lib::token::Token;
 
 pub struct Parser {
     input: Vec<Token>,
@@ -55,14 +55,13 @@ impl Parser {
             None => return Err(UNEXPECTED_EOF),
         }
     }
-
-    pub fn parse(&mut self) -> Result<Deserialized, DeserializationError> {
+    fn parse_literal_val(&mut self) -> Result<Deserialized, DeserializationError> {
         match self.curr_token() {
             Token::DoubleQuote => match self.next_token() {
                 Some(Token::Str(v)) => {
                     let str = v.clone();
                     self.expect_next(&Token::DoubleQuote)?;
-                    self.next_token();
+                    self.advance_cursor();
                     return Ok(Deserialized::Str(str));
                 }
                 Some(t) => {
@@ -88,55 +87,10 @@ impl Parser {
                 return Ok(Deserialized::Null);
             }
             Token::LeftBrace => {
-                if let Some(Token::RightBrace) = self.peek_next() {
-                    return Ok(Deserialized::Map(HashMap::new()));
-                }
-                let mut data: HashMap<String, Deserialized> = HashMap::new();
-                loop {
-                    self.expect_next(&Token::DoubleQuote)?;
-                    self.next_token();
-                    let key = match self.next_token() {
-                        Some(Token::Str(k)) => k.clone(),
-                        Some(other) => {
-                            return Err(UNEXPECTED_TOKEN(format!(
-                                "expected 'string' found {}",
-                                other.str_represenation()
-                            )));
-                        }
-                        None => {
-                            return Err(UNEXPECTED_EOF);
-                        }
-                    };
-                    self.expect_next(&Token::DoubleQuote)?;
-                    self.next_token();
-                    self.expect_next(&Token::Colon)?;
-                    self.next_token();
-                    self.next_token();
-                    println!("curr token: {:?}", self.curr_token());
-                    println!("next token: {:?}", self.peek_next());
-                    let val = self.parse()?;
-                    data.insert(key, val);
-                    match self.next_token() {
-                        Some(Token::Comma) => {
-                            continue;
-                        }
-                        Some(Token::RightBrace) => {
-                            return Ok(Deserialized::Map(data));
-                        }
-                        Some(t) => {
-                            return Err(UNEXPECTED_TOKEN(format!(
-                                "expected ',' or '}}' found: {}",
-                                t.str_represenation()
-                            )));
-                        }
-                        None => {
-                            return Err(UNEXPECTED_EOF);
-                        }
-                    }
-                }
+                return self.parse_obj();
             }
             Token::LeftBracket => {
-                todo!();
+                return self.parse_array();
             }
             t => {
                 return Err(UNEXPECTED_TOKEN(format!(
@@ -146,25 +100,115 @@ impl Parser {
             }
         }
     }
+    fn parse_obj(&mut self) -> Result<Deserialized, DeserializationError> {
+        if !(self.curr_token() == &Token::LeftBrace) {
+            return Err(UNEXPECTED_TOKEN("expected '{'".into()));
+        }
+        if let Some(Token::RightBrace) = self.peek_next() {
+            self.advance_cursor();
+            return Ok(Deserialized::Object(HashMap::new()));
+        }
+        let mut data: HashMap<String, Deserialized> = HashMap::new();
+        loop {
+            self.expect_next(&Token::DoubleQuote)?;
+            self.advance_cursor();
+            let key = match self.next_token() {
+                Some(Token::Str(k)) => k.clone(),
+                Some(other) => {
+                    return Err(UNEXPECTED_TOKEN(format!(
+                        "expected 'string' found {}",
+                        other.str_represenation()
+                    )));
+                }
+                None => {
+                    return Err(UNEXPECTED_EOF);
+                }
+            };
+            self.expect_next(&Token::DoubleQuote)?;
+            self.advance_cursor();
+            self.expect_next(&Token::Colon)?;
+            self.advance_cursor();
+            self.advance_cursor();
+            println!("curr token: {:?}", self.curr_token());
+            println!("next token: {:?}", self.peek_next());
+            let val = self.parse_literal_val()?;
+            data.insert(key, val);
+            match self.next_token() {
+                Some(Token::Comma) => {
+                    continue;
+                }
+                Some(Token::RightBrace) => {
+                    return Ok(Deserialized::Object(data));
+                }
+                Some(t) => {
+                    return Err(UNEXPECTED_TOKEN(format!(
+                        "expected ',' or '}}' found: {}",
+                        t.str_represenation()
+                    )));
+                }
+                None => {
+                    return Err(UNEXPECTED_EOF);
+                }
+            }
+        }
+    }
+    fn parse_array(&mut self) -> Result<Deserialized, DeserializationError> {
+        println!("parsing array");
+        if !(self.curr_token() == &Token::LeftBracket) {
+            return Err(UNEXPECTED_TOKEN("expected '['".into()));
+        }
+        let mut data: Vec<Deserialized> = vec![];
+        if let Some(t) = self.peek_next() {
+            if t == &Token::RightBracket {
+                return Ok(Deserialized::Array(data));
+            }
+        } else {
+            return Err(UNEXPECTED_EOF);
+        }
+        self.advance_cursor();
+        loop {
+            println!("curr token: {:?}", self.curr_token());
+            // todo!();
+            data.push(self.parse_literal_val()?);
+            println!("pushed");
+
+                match self.next_token() {
+                    Some(Token::Comma) => {
+                        self.advance_cursor();
+                        continue;
+                    }
+                    Some(Token::RightBracket) => {
+                        return Ok(Deserialized::Array(data));
+                    }
+                    Some(t) => {
+                        return Err(UNEXPECTED_TOKEN(format!("expected any of ',' and ']', found {}", t.str_represenation())));
+                    }
+                    None => {
+                        return Err(UNEXPECTED_EOF);
+                    }
+                }
+
+            }
+    }
+    pub fn parse(&mut self) -> Result<Deserialized, DeserializationError> {
+        return self.parse_literal_val();
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
 
+    use super::DeserializationError;
+    use super::Deserialized;
     use super::Parser;
     use super::Token::{
-        Boolean, Colon, Comma, DoubleQuote, LeftBrace, Null, Number, RightBrace, Str,
+        Boolean, Colon, Comma, DoubleQuote, LeftBrace, LeftBracket, Null, Number, RightBrace,
+        RightBracket, Str,
     };
-    use super::Deserialized;
-    use super::DeserializationError;
     #[test]
     fn only_sring() {
-        let tokens = vec![
-            DoubleQuote,
-            Str("ungabunga".into()),
-            DoubleQuote,
-        ];
+        let tokens = vec![DoubleQuote, Str("ungabunga".into()), DoubleQuote];
         let parsed = Parser::new(tokens).parse();
         println!("{:?}", parsed);
         assert_eq!(parsed, Ok(Deserialized::Str("ungabunga".into())));
@@ -226,10 +270,31 @@ mod tests {
 
         let parsed = Parser::new(tokens).parse();
         println!("{:?}", parsed);
-        let map = Deserialized::Map(HashMap::from([
+        let map = Deserialized::Object(HashMap::from([
             ("key".to_string(), Deserialized::Number(12f64)),
-            ("key2".to_string(), Deserialized::Boolean(true))
+            ("key2".to_string(), Deserialized::Boolean(true)),
         ]));
         assert_eq!(parsed, Ok(map));
+    }
+    #[test]
+    fn valid_arr() {
+        let tokens = vec![
+            LeftBracket,
+            DoubleQuote,
+            Str("v1".into()),
+            DoubleQuote,
+            Comma,
+            Number(12f64),
+            Comma,
+            DoubleQuote,
+            Str("v2".into()),
+            DoubleQuote,
+            Comma,
+            Boolean(true),
+            RightBracket,
+        ];
+
+        let parsed = Parser::new(tokens).parse();
+        println!("{:?}", parsed);
     }
 }
