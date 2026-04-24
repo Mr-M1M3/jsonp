@@ -1,12 +1,12 @@
 mod deserialized;
 mod errors;
 mod parser;
-mod tokenizer;
 use parser::Parser;
+mod tokenizer;
 
 use crate::lib::{deserialized::Deserialized, errors::DeserializationError};
 
-pub fn deserialize(input: String) -> Result<Deserialized, DeserializationError> {
-    let tokens = tokenizer::tokenize(input)?;
-    return Parser::new(tokens).parse();
-}
+// pub fn deserialize(input: String) -> Result<Deserialized, DeserializationError> {
+//     let tokens = tokenizer::tokenize(input)?;
+//     return Parser::new(tokens).parse();
+// }
