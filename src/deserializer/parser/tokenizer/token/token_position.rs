@@ -14,6 +14,7 @@ impl TokenPosition {
     pub fn origin() -> TokenPosition {
         TokenPosition { line: 1, col: 1 }
     }
+    #[allow(dead_code)] // this method is heavily used in testing
     pub fn from((line, col): (usize, usize)) -> TokenPosition {
         TokenPosition { line, col }
     }

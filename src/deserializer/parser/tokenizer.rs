@@ -1,6 +1,8 @@
-use super::{Token, TokenPosition};
-use crate::lib::errors::DeserializationError;
-use DeserializationError::{INVALID_NUMBER, UNEXPECTED_EOF, UNEXPECTED_TOKEN};
+mod token;
+pub use token::{Token, TokenPosition};
+
+use crate::utils::errors::DeserializationError;
+use DeserializationError::{InvalidNumber, UnexpctedEOF, UnexpectedToken};
 
 pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
     let mut token_position = TokenPosition::origin();
@@ -61,7 +63,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
                             }
                         }
                         None => {
-                            return Err(UNEXPECTED_EOF);
+                            return Err(UnexpctedEOF);
                         }
                     }
                 }
@@ -96,7 +98,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
                     if let Some((_, part_of_null)) = iterable_input.next() {
                         null_acum.push(part_of_null);
                     } else {
-                        return Err(UNEXPECTED_EOF);
+                        return Err(UnexpctedEOF);
                     }
                     token_position.adv_col();
                 }
@@ -105,7 +107,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
                         pos: n_pos,
                     })
                 } else {
-                    return Err(UNEXPECTED_TOKEN("unexpected token n".into()));
+                    return Err(UnexpectedToken("unexpected token n".into()));
                 }
             }
 
@@ -119,7 +121,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
                     if let Some((_, part_of_true)) = iterable_input.next() {
                         true_acum.push(part_of_true);
                     } else {
-                        return Err(UNEXPECTED_EOF);
+                        return Err(UnexpctedEOF);
                     }
                     token_position.adv_col();
                 }
@@ -129,7 +131,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
                         val: true,
                     })
                 } else {
-                    return Err(UNEXPECTED_TOKEN("unexpected token t".into()));
+                    return Err(UnexpectedToken("unexpected token t".into()));
                 }
             }
 
@@ -143,7 +145,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
                     if let Some((_, part_of_false)) = iterable_input.next() {
                         false_acum.push(part_of_false);
                     } else {
-                        return Err(UNEXPECTED_EOF);
+                        return Err(UnexpctedEOF);
                     }
                     token_position.adv_col();
                 }
@@ -153,7 +155,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
                         val: false,
                     });
                 } else {
-                    return Err(UNEXPECTED_TOKEN("unexpected token f".into()));
+                    return Err(UnexpectedToken("unexpected token f".into()));
                 }
             }
             other => {
@@ -196,7 +198,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
                     }
                     let num = num_accum.parse::<f64>();
                     if num.is_err() {
-                        return Err(INVALID_NUMBER);
+                        return Err(InvalidNumber);
                     } else {
                         token_accum.push(Token::Number {
                             pos: num_pos,
@@ -204,7 +206,7 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
                         });
                     }
                 } else {
-                    return Err(UNEXPECTED_TOKEN(format!("unexpected token {other}")));
+                    return Err(UnexpectedToken(format!("unexpected token {other}")));
                 }
             }
         }
@@ -214,9 +216,9 @@ pub fn tokenize(input: String) -> Result<Vec<Token>, DeserializationError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::lib::tokenizer::TokenPosition;
+    use super::TokenPosition;
 
-    use super::{DeserializationError::*, Token::*, tokenize};
+    use super::{Token::*, tokenize};
     #[test]
     fn tokenization_only_l_brace() {
         let input: String = "{".to_string();

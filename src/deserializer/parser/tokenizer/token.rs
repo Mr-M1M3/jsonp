@@ -1,6 +1,7 @@
-use crate::lib::errors::DeserializationError;
-use crate::lib::errors::DeserializationError::UNEXPECTED_TOKEN;
-use crate::lib::tokenizer::TokenPosition;
+use crate::utils::errors::DeserializationError;
+use DeserializationError::UnexpectedToken;
+mod token_position;
+pub use token_position::TokenPosition;
 
 #[derive(PartialEq, Debug)]
 
@@ -46,7 +47,7 @@ impl Token {
         if self.is_left_brace() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -64,7 +65,7 @@ impl Token {
         if self.is_right_brace() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -82,7 +83,7 @@ impl Token {
         if self.is_left_bracket() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -100,7 +101,7 @@ impl Token {
         if self.is_right_bracket() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -119,7 +120,7 @@ impl Token {
         if self.is_double_quote() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -137,7 +138,7 @@ impl Token {
         if self.is_colon() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -155,7 +156,7 @@ impl Token {
         if self.is_comma() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -173,7 +174,7 @@ impl Token {
         if self.is_string() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -191,7 +192,7 @@ impl Token {
         if self.is_number() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -209,7 +210,7 @@ impl Token {
         if self.is_boolean() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -227,7 +228,7 @@ impl Token {
         if self.is_null() {
             return Ok(self);
         } else {
-            return Err(UNEXPECTED_TOKEN(format!(
+            return Err(UnexpectedToken(format!(
                 "unexpected token {}",
                 self.to_string()
             )));
@@ -237,7 +238,7 @@ impl Token {
 
 #[cfg(test)]
 mod tests {
-    use crate::lib::tokenizer::TokenPosition;
+    use super::TokenPosition;
 
     use super::Token;
 
